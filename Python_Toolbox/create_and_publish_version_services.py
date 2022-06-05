@@ -15,6 +15,7 @@ if workspace_description.connectionProperties.instance != u'sde:postgresql:local
 
 # Other check: Only one dataset and the dataset must be versioned
 # This way, the database name and the dataset can be got from map config
+# Also check that current version is "default"
 
 dirname = os.path.dirname(__file__)
 connection_folder = os.path.join(dirname, 'Connections')
@@ -53,6 +54,7 @@ def create_version(version_name, db_name, db_sde_password):
     arcpy.ChangeVersion_management('geofences','TRANSACTIONAL', full_version_name,'')
     arcpy.ChangeVersion_management('pois','TRANSACTIONAL', full_version_name,'')
     time.sleep(2)
+    arcpy.AddMessage("Step 2: Create database connection file: " + db_connection_file)
     arcpy.management.CreateDatabaseConnection(
         connection_folder, 
         db_connection_file, 
@@ -66,16 +68,16 @@ def create_version(version_name, db_name, db_sde_password):
         None, 
         "TRANSACTIONAL", 
         full_version_name)
-    sdeWorkspace = os.path.join(connection_folder,db_connection_file)
-    arcpy.AddDataStoreItem(connection_full_path, "DATABASE", version_name, sdeWorkspace, sdeWorkspace)
+    arcpy.AddMessage("Step 3: Register source in ArcGIS Server " + connection_full_path)
+    arcpy.AddDataStoreItem(connection_full_path, "DATABASE", version_name, connection_full_path, connection_full_path)
     versionedMapDocumentPath = os.path.join(version_folder, db_name + "_" + version_name + ".mxd")
     versionedServiceDraftPath = os.path.join(version_folder, db_name + "_" + version_name + ".sddraft")
     versionedServiceSdPath = os.path.join(version_folder, db_name + "_" + version_name + ".sd")
-    arcpy.AddMessage("Step 2: Saving map document version")
+    arcpy.AddMessage("Step 4: Saving map document version")
     mxd = arcpy.mapping.MapDocument("CURRENT")
     mxd.saveACopy(versionedMapDocumentPath)
     mxdVersioned = arcpy.mapping.MapDocument(versionedMapDocumentPath)
-    arcpy.AddMessage("Step 3: Generate service draft")
+    arcpy.AddMessage("Step 5: Generate service draft")
     analysis = arcpy.mapping.CreateMapSDDraft(mxdVersioned, versionedServiceDraftPath, version_name, 'ARCGIS_SERVER', 
                                             connection_full_path, True, db_name, summary, tags)
     draft_errors = False
@@ -88,19 +90,19 @@ def create_version(version_name, db_name, db_sde_password):
         # Execute StageService
         analysis = arcpy.mapping.AnalyzeForSD(versionedServiceDraftPath)
         if analysis['errors'] == {}:
-            arcpy.AddMessage("Step 4: Generate service definition")
+            arcpy.AddMessage("Step 6: Generate service definition")
             arcpy.StageService_server(versionedServiceDraftPath, versionedServiceSdPath)
-            arcpy.AddMessage("Step 5: Upload service definition")
+            arcpy.AddMessage("Step 7: Upload service definition")
             arcpy.UploadServiceDefinition_server(versionedServiceSdPath, connection_full_path)
         else:
             draft_errors = True 
     else: 
         draft_errors = True
     # Restore versions and workspace to sde 
-    arcpy.AddMessage("Step 6: Restore default version in current map")
+    arcpy.AddMessage("Step 8: Restore default version in current map")
     arcpy.ChangeVersion_management('geofences','TRANSACTIONAL', parentVersion,'')
     arcpy.ChangeVersion_management('pois','TRANSACTIONAL', parentVersion,'')
-    time.sleep(10)
+    time.sleep(3)
     if draft_errors:
         arcpy.AddError(analysis['errors'])
 
@@ -113,10 +115,7 @@ def process(config):
     if workspace_description.connectionProperties.database != db_name:
         arcpy.AddError("Error: Current workspace need to be a connected to target DB")
         exit()
-    arcpy.AddMessage("db_sde_password: " + db_sde_password)
-    arcpy.AddMessage("server_publisher_name: " + server_publisher_name)
-    arcpy.AddMessage("server_publisher_password: " + server_publisher_password)
-    arcpy.AddMessage("Prepare GIS Server connection file")
+    arcpy.AddMessage("Preparing GIS Server connection file")
     if os.path.exists(connection_full_path):
         os.remove(connection_full_path)
     arcpy.mapping.CreateGISServerConnectionFile("ADMINISTER_GIS_SERVICES",
