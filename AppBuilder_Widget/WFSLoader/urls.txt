@@ -1,0 +1,3 @@
+https://desktop-bhfu9l0:6443/arcgis/rest/services/geofences_and_pois/geofences_and_pois/FeatureServer
+
+https://desktop-bhfu9l0:6443/arcgis/rest/services/geofences_and_pois/geofences_and_pois_2/FeatureServer
