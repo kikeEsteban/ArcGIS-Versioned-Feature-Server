@@ -48,28 +48,28 @@ def process(config):
     server_publisher_name = config["server_publisher_name"]
     server_publisher_password = config["server_publisher_password"]
     token = gentoken(server_publisher_name, server_publisher_password)
-    version_name = "test_3"
-    arcpy.AddMessage("Deleting " + version_name)
-    status = delete_service(db_name, version_name, token)
-    if status==200:
-        arcpy.AddMessage("Deleted service " + version_name)
-        arcpy.RemoveDataStoreItem(connection_full_path,"DATABASE",version_name)
-        db_connection_file = version_name + "@" + db_name + ".sde"
-        db_connection_full_path = os.path.join(connection_folder,db_connection_file)
-        if os.path.exists(db_connection_full_path):
-            os.remove(db_connection_full_path)
-        versionedMapDocumentPath = os.path.join(version_folder, db_name + "_" + version_name + ".mxd")
-        if os.path.exists(versionedMapDocumentPath):
-            os.remove(versionedMapDocumentPath)
-        versionedServiceDraftPath = os.path.join(version_folder, db_name + "_" + version_name + ".sddraft")
-        if os.path.exists(versionedServiceDraftPath):
-            os.remove(versionedServiceDraftPath)        
-        versionedServiceSdPath = os.path.join(version_folder, db_name + "_" + version_name + ".sd")
-        if os.path.exists(versionedServiceSdPath):
-            os.remove(versionedServiceSdPath)                 
-        arcpy.management.DeleteVersion(arcpy.env.workspace, version_name)
-    else:
-        arcpy.AddError("Error deleting " + version_name + " status code "+ str(status))
+    for version_name in version_names:
+        arcpy.AddMessage("Deleting " + version_name)
+        status = delete_service(db_name, version_name, token)
+        if status==200:
+            arcpy.RemoveDataStoreItem(connection_full_path,"DATABASE",version_name)
+            db_connection_file = version_name + "@" + db_name + ".sde"
+            db_connection_full_path = os.path.join(connection_folder,db_connection_file)
+            if os.path.exists(db_connection_full_path):
+                os.remove(db_connection_full_path)
+            versionedMapDocumentPath = os.path.join(version_folder, db_name + "_" + version_name + ".mxd")
+            if os.path.exists(versionedMapDocumentPath):
+                os.remove(versionedMapDocumentPath)
+            versionedServiceDraftPath = os.path.join(version_folder, db_name + "_" + version_name + ".sddraft")
+            if os.path.exists(versionedServiceDraftPath):
+                os.remove(versionedServiceDraftPath)        
+            versionedServiceSdPath = os.path.join(version_folder, db_name + "_" + version_name + ".sd")
+            if os.path.exists(versionedServiceSdPath):
+                os.remove(versionedServiceSdPath)                 
+            arcpy.management.DeleteVersion(arcpy.env.workspace, version_name)
+            arcpy.AddMessage("Deleted service " + version_name)
+        else:
+            arcpy.AddError("Error deleting " + version_name + " status code "+ str(status))
 
 with open(arcpy.GetParameterAsText(1)) as f:
     config = json.load(f)

@@ -44,6 +44,7 @@ def configure_service_draft(doc):
 
 def create_version(version_name, db_name, db_sde_password):
     db_connection_file = version_name + "@" + db_name + ".sde"
+    db_connection_full_path = os.path.join(connection_folder,db_connection_file)
     full_version_name = "sde." + version_name
     parentVersion = "sde.DEFAULT"
     summary = 'Editable version of ' + db_name + ' with name ' + version_name
@@ -68,8 +69,8 @@ def create_version(version_name, db_name, db_sde_password):
         None, 
         "TRANSACTIONAL", 
         full_version_name)
-    arcpy.AddMessage("Step 3: Register source in ArcGIS Server " + connection_full_path)
-    arcpy.AddDataStoreItem(connection_full_path, "DATABASE", version_name, connection_full_path, connection_full_path)
+    arcpy.AddMessage("Step 3: Register source in ArcGIS Server " + db_connection_file)
+    arcpy.AddDataStoreItem(connection_full_path, "DATABASE", version_name, db_connection_full_path, db_connection_full_path)
     versionedMapDocumentPath = os.path.join(version_folder, db_name + "_" + version_name + ".mxd")
     versionedServiceDraftPath = os.path.join(version_folder, db_name + "_" + version_name + ".sddraft")
     versionedServiceSdPath = os.path.join(version_folder, db_name + "_" + version_name + ".sd")
