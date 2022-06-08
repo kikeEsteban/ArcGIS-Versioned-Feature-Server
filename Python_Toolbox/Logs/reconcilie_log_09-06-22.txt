@@ -1,0 +1,5 @@
+[09/06/2022 0:27:05] Iniciando la conciliación.
+[09/06/2022 0:27:05] Reconciliando la versión sde.manual_test con la sde.DEFAULT.
+[09/06/2022 0:27:05] Publicando las versiones sde.manual_test a sde.DEFAULT.
+[09/06/2022 0:27:06] 1 de 1 versiones terminadas.
+[09/06/2022 0:27:06] Reconciliación finalizada.
