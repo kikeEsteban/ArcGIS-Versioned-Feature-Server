@@ -20,6 +20,7 @@
     "hasSettingUIFile": false,
     "hasSettingLocale": false,
     "hasSettingStyle": false,
-    "ISController": false
+    "ISController": false,
+    "keepConfigAfterMapSwitched":true
   }
 }

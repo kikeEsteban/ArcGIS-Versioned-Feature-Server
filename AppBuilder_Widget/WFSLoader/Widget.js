@@ -4,15 +4,16 @@ define([
   'esri/layers/FeatureLayer',
   "esri/request",
   'dojo/_base/html',
+  "esri/geometry/Point",
+  "esri/InfoTemplate"
   ],
-  function(declare, BaseWidget, FeatureLayer, esriRequest, html) {
+  function(declare, BaseWidget, FeatureLayer, esriRequest, html, Point, InfoTemplate) {
     return declare([BaseWidget], {
       baseClass: 'jimu-widget-WMSLoader',
       name: "WMSLoader",
       addFMS: function() {
-
-        html.empty(this.customContentNode);
-
+        html.empty(this.errorResultNode);
+        html.empty(this.loadedResultNode);
         if(this.wfsTextBox.value != ""){
           var params = {
               url: this.config.base_url + this.wfsTextBox.value + "/FeatureServer",
@@ -29,20 +30,28 @@ define([
                 }
               }
               this.addedLayers = []
+              const fullExtent = result["fullExtent"]
+              var contentStr = "<div style='display: flex; flex-direction: column;'><div>Layers loaded:</div>"
+              var infoTemplate = new InfoTemplate("Attributes", "${*}");
               for(const layer in result.layers){
                 const layerUrl = params.url + "/" + result.layers[layer].id;
-                const featureLayer = new FeatureLayer(layerUrl);
+                const featureLayer = new FeatureLayer(layerUrl,{outFields:["*"], infoTemplate: infoTemplate});
                 const addedLayer = this.map.addLayer(featureLayer);
                 this.addedLayers.push(addedLayer);
+                contentStr = contentStr + "<div style='margin-top: 5px'>" + result.layers[layer].type + " <b>" + result.layers[layer].name + "</b> of type: " + result.layers[layer].geometryType + "</div>"
               }
+              contentStr = contentStr + "</div>"
+              const x = (fullExtent.xmax + fullExtent.xmin) / 2
+              const y = (fullExtent.ymax + fullExtent.ymin) / 2
+              this.map.centerAndZoom(new Point(x,y,fullExtent.spatialReference),1)
+              var aboutContent = html.toDom(contentStr);
+              html.place(aboutContent, this.loadedResultNode);
             }
           }, null, (update) => { 
-            console.log("progress !!!", update); 
+            console.log("load feature set progress !!!", update); 
           }).catch((err) => { 
-            console.log("Error !!!")
-            console.log(err);
-            var aboutContent = html.toDom("<span>Error!!!</span>");
-            html.place(aboutContent, this.customContentNode);
+            var aboutContent = html.toDom("<span>Error loading feature set: " + err.message+ "</span>");
+            html.place(aboutContent, this.errorResultNode);
           });
         }
       }

@@ -1,3 +1,33 @@
-.feedback {
+.mainContainer {
+  display: flex;
+  flex-direction: column;
+}
+
+.inputLabel {
+  font-family: 'Avenir Light', Verdana, Geneva, sans-serif;
+  font-size: 16px;
+  font-weight: normal;
+  color: #000000dd;
+  margin-bottom: 10px;
+}
+
+.inputRow {
+  display: flex;
+  flex-direction: row;
+}
+
+.feedbackLoaded {
+  font-family: 'Avenir Light', Verdana, Geneva, sans-serif;
+  font-size: 14px;
+  font-weight: normal;
+  color: #000000dd;
+  margin-top: 10px;
+}
+
+.feedbackError {
+  font-family: 'Avenir Light', Verdana, Geneva, sans-serif;
+  font-size: 14px;
+  font-weight: normal;
   color: #FF0000;
+  margin-top: 10px;
 }

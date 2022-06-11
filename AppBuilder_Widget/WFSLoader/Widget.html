@@ -1,9 +1,9 @@
-<div>
-  <label data-dojo-attach-point="wfsLabel">WFS: </label>
-  <br />
-  <div>
-    <input class="jimu-input" type="text" data-dojo-type="digit/form/TextBox" data-dojo-attach-point="wfsTextBox" style="box-sizing: context-box !important;" value="" />
-    <input type="button" class="jimu-button" data-dojo-attach-event="onclick:addFMS" value="add wfs" />
-    <div class="feedback" data-dojo-attach-point="customContentNode"></div>
+<div class="mainContainer">
+  <div class="inputLabel">Feature Set name: </div>
+  <div class="inputRow">
+    <input class="jimu-input" style="width: 100%; margin-right: 10px" type="text" data-dojo-type="digit/form/TextBox" data-dojo-attach-point="wfsTextBox" style="box-sizing: context-box !important;" value="" />
+    <input type="button" class="jimu-button" style="padding: 0 10px" data-dojo-attach-event="onclick:addFMS" value="Load" />
   </div>
+  <div class="feedbackLoaded" data-dojo-attach-point="loadedResultNode"></div>
+  <div class="feedbackError" data-dojo-attach-point="errorResultNode"></div>
 </div>
