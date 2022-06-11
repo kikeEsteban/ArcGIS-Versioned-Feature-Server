@@ -48,7 +48,7 @@ def create_version(version_name, db_name, db_sde_password):
     full_version_name = "sde." + version_name
     parentVersion = "sde.DEFAULT"
     summary = 'Editable version of ' + db_name + ' with name ' + version_name
-    tags = 'TFM, EEG' 
+    tags = 'EEG, TFM, Esri, ArcGIS Server, Postgresql' 
     arcpy.AddMessage("Process " + full_version_name)
     arcpy.AddMessage("Step 1: Generating version: " + full_version_name)
     arcpy.CreateVersion_management(arcpy.env.workspace, parentVersion, version_name, "PUBLIC")
