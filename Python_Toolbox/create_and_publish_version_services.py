@@ -9,13 +9,22 @@ workspace_description = arcpy.Describe(arcpy.env.workspace)
 if workspace_description.workspaceType != u'RemoteDatabase':
     arcpy.AddError("Error: Current workspace need to be a RemoteDatabase")
     exit()
-if workspace_description.connectionProperties.instance != u'sde:postgresql:localhost':
-    arcpy.AddError("Error: Current workspace need to be sde connection to a Postgresql running in localhost")
+if workspace_description.connectionProperties.instance.find("postgresql:localhost") < 0:
+    arcpy.AddError("Error: Current workspace need to be a Postgresql database running in localhost")
+    exit()
+if workspace_description.connectionProperties.user != u'sde':
+    arcpy.AddError("Error: Current workspace need to be in sde user")
+    exit()    
+if workspace_description.connectionProperties.version != u'sde.DEFAULT':
+    arcpy.AddError("Error: Current workspace need to be in default version")
     exit()
 
-# Other check: Only one dataset and the dataset must be versioned
-# This way, the database name and the dataset can be got from map config
-# Also check that current version is "default"
+mxd = arcpy.mapping.MapDocument("CURRENT")
+map_layers = arcpy.mapping.ListLayers(mxd)
+for layer in map_layers:
+    if not layer.isFeatureLayer:
+        arcpy.AddError("Error: All layers in the map need to be FeatureLayers")
+        exit() 
 
 dirname = os.path.dirname(__file__)
 connection_folder = os.path.join(dirname, 'Connections')
@@ -33,6 +42,18 @@ arcpy.AddMessage("Input parameters: ")
 version_names = arcpy.GetParameter(0)
 arcpy.AddMessage(version_names)
 arcpy.AddMessage("Config file: " + arcpy.GetParameterAsText(1))
+
+adminConn = arcpy.env.workspace
+versionList = arcpy.ListVersions(adminConn)
+for version_name in version_names:
+    full_version_name = "sde." + version_name
+    try:
+        if versionList.index(full_version_name) >= 0:
+            arcpy.AddError(version_name + " version already exists")
+            exit(-1)
+    except ValueError as e:
+        pass
+
 
 def configure_service_draft(doc):
     type_names = doc.getElementsByTagName('TypeName')
@@ -101,8 +122,8 @@ def create_version(version_name, db_name, db_sde_password):
         draft_errors = True
     # Restore versions and workspace to sde 
     arcpy.AddMessage("Step 8: Restore default version in current map")
-    arcpy.ChangeVersion_management('geofences','TRANSACTIONAL', parentVersion,'')
-    arcpy.ChangeVersion_management('pois','TRANSACTIONAL', parentVersion,'')
+    for layer in map_layers:
+        arcpy.ChangeVersion_management(layer.name,'TRANSACTIONAL', parentVersion,'')
     time.sleep(3)
     if draft_errors:
         arcpy.AddError(analysis['errors'])
@@ -135,6 +156,11 @@ def process(config):
 with open(arcpy.GetParameterAsText(1)) as f:
     config = json.load(f)
     process(config)
+
+
+
+
+
 
 
 

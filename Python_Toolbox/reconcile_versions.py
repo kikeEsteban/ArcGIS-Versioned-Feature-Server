@@ -28,21 +28,16 @@ version_names = []
 for input in inputs:
     if os.path.exists(input):
         arcpy.AddMessage(input + " is a file")
-        # set Json format for list versions in a file. 
-        # Fields like summary and tags can be added here
     else:
         version_names.append("sde." + input)
 
 versionList = arcpy.ListVersions(adminConn)
-arcpy.AddMessage("Version list:")
-arcpy.AddMessage(versionList)
-
 for version_name in version_names:
     try:
         versionList.index(version_name)
     except ValueError as e:
        arcpy.AddError(version_name + " version doesn't exist")
-       raise 
+       exit()
 
 type_of_conflict = "BY_OBJECT"
 by_attribute = arcpy.GetParameter(1)

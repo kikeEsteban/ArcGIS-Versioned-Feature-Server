@@ -225,8 +225,14 @@
       .then( (data) => {
         const geofencesLayer = L.geoJSON(data, poisConfig)
         geofencesLayer.addTo(map)
-        const boundary = sumBoundaries(poisLayer.getBounds(), geofencesLayer.getBounds())
-        map.fitBounds(boundary, { padding: [100,100] })
+        if(poisLayer.getBounds()._southWest && geofencesLayer.getBounds()._southWest){
+          const boundary = sumBoundaries(poisLayer.getBounds(), geofencesLayer.getBounds())
+          map.fitBounds(boundary, { padding: [100,100] })
+        } else if(poisLayer.getBounds()._southWest) {
+          map.fitBounds(poisLayer.getBounds(), { padding: [100,100] })
+        } else if(geofencesLayer.getBounds()._southWest) {
+          map.fitBounds(geofencesLayer.getBounds(), { padding: [100,100] })
+        }
         const baseLayers = {
           "Boton base map": tiles
         }

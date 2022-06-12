@@ -8,13 +8,15 @@ workspace_description = arcpy.Describe(arcpy.env.workspace)
 if workspace_description.workspaceType != u'RemoteDatabase':
     arcpy.AddError("Error: Current workspace need to be a RemoteDatabase")
     exit()
-if workspace_description.connectionProperties.instance != u'sde:postgresql:localhost':
-    arcpy.AddError("Error: Current workspace need to be sde connection to a Postgresql running in localhost")
+if workspace_description.connectionProperties.instance.find("postgresql:localhost") >= 0:
+    arcpy.AddError("Error: Current workspace need to be a Postgresql database running in localhost")
     exit()
-
-# Other check: Only one dataset and the dataset must be versioned
-# This way, the database name and the dataset can be got from map config
-# Also check that current version is "default"
+if workspace_description.connectionProperties.user == u'sde':
+    arcpy.AddError("Error: Current workspace need to be in sde user")
+    exit()    
+if workspace_description.connectionProperties.version == u'sde.DEFAULT':
+    arcpy.AddError("Error: Current workspace need to be in default version")
+    exit()
 
 dirname = os.path.dirname(__file__)
 connection_folder = os.path.join(dirname, 'Connections')
@@ -27,6 +29,15 @@ arcpy.AddMessage(version_names)
 arcpy.AddMessage("Config file: " + arcpy.GetParameterAsText(1))
 system_name = platform.node()
 adminConn = arcpy.env.workspace
+
+versionList = arcpy.ListVersions(adminConn)
+for version_name in version_names:
+    full_version_name = "sde." + version_name
+    try:
+        versionList.index(full_version_name)
+    except ValueError as e:
+       arcpy.AddError(version_name + " version doesn't exist")
+       exit()
 
 def gentoken(username, password, expiration=60):
     query_dict = {'username':   username,
