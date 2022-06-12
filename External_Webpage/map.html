@@ -1,0 +1,261 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+	
+	<title>Geofences and POIs</title>
+	<meta charset="utf-8" />
+	<meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <link href='https://fonts.googleapis.com/css?family=Overpass' rel='stylesheet'>
+  <link rel="shortcut icon" type="image/x-icon" href="favicon.ico" />
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.7.1/dist/leaflet.css" integrity="sha512-xodZBNTC5n17Xt2atTPuE1HxjVMSvLVW9ocqUKLsCC5CXdbqCmblAshOMAS6/keqq/sMZMZ19scR4PsZChSR7A==" crossorigin=""/>
+  <script src="https://unpkg.com/leaflet@1.7.1/dist/leaflet.js" integrity="sha512-XQoYMqMTK8LvdxXYG3nZ448hOEQiglfqkJs1NOQV44cWnUrBc8PkAOcXy20w0vlaXaVUearIOBhiXZ5V3ynxwA==" crossorigin=""></script>
+
+	<style>
+		html, body {
+			height: 100%;
+			margin: 0;
+      font-family: 'Overpass';font-size: 22px;
+		}
+		.leaflet-container {
+			height: 100%;
+			width: 100%;
+			max-width: 100%;
+			max-height: 100%;
+		}
+    .popupContainer {
+      display: flex;
+      flex-direction: column;
+      align-items: flex-start;
+    }
+    .id {
+      font-size: 16px;
+      letter-spacing: -0.24px;
+      color: #000000;
+      font-weight: 500;
+      text-align: center;
+      padding: 5px 0
+    }
+    .description {
+      font-size: 12px;
+      letter-spacing: -0.18px;
+      color: #464953;
+      font-weight: 400;
+      margin: 5px 0
+    }
+    .info {
+      padding: 6px 8px;
+      font: 14px Arial, Helvetica, sans-serif;
+      background: white;
+      box-shadow: 0 0 15px rgba(0, 0, 0, 0.2);
+      border-radius: 5px;
+      line-height: 24px;
+      color: #555;
+      display: flex;
+      flex-direction: column;
+      align-items: flex-start;
+    }
+    .legendRow {
+      display: flex;
+      justify-content: flex-start;
+      align-items: center;
+    }
+    .dot {
+      height: 16px;
+      width: 16px;
+      border-radius: 50%;
+      display: inline-block;
+    }
+    .legendLabel {
+      margin: 2px 5px
+    }
+	</style>
+	
+</head>
+<body>
+
+<div id="map" style="width: 100%; height: 100%;"></div>
+
+
+<script>
+
+	var map = L.map('map').setView([51.505, -0.09], 13)
+
+	var tiles = L.tileLayer("https://cartodb-basemaps-{s}.global.ssl.fastly.net/light_all/{z}/{x}/{y}.png", {
+		maxZoom: 18,
+		attribution: 
+      "&copy; <a href=\"https://www.openstreetmap.org/copyright\">OpenStreetMap</a> contributors &copy; <a href=\"https://carto.com/attributions\">CARTO</a>",
+		id: 'mapbox/streets-v11',
+		tileSize: 512,
+		zoomOffset: -1
+	}).addTo(map);
+
+  const categories = [
+    {
+      name: "Default",
+      point : {
+        radius: 8,
+        weight: 10,
+        opacity: 0.4,
+        color: "#f8766d",
+        fill: true,
+        fillColor: "#f8766d",
+        fillOpacity: 1,
+      },
+      polygon :  {
+        weight: 3,
+        color: "#f8766d"
+      }
+    },
+    {
+      name: "Oil station",
+      point : {
+        radius: 8,
+        weight: 10,
+        opacity: 0.4,
+        color: "#c49a00",
+        fill: true,
+        fillColor: "#c49a00",
+        fillOpacity: 1,
+      },
+      polygon :  {
+        weight: 3,
+        color: "#c49a00"
+      }
+    },
+    {
+      name: "Electric station",
+      point : {
+        radius: 8,
+        weight: 10,
+        opacity: 0.4,
+        color: "#02c094",
+        fill: true,
+        fillColor: "#02c094",
+        fillOpacity: 1,
+      },
+      polygon :  {
+        weight: 3,
+        color: "#02c094"
+      }
+    },
+    {
+      name: "Workshop",
+      point : {
+        radius: 8,
+        weight: 10,
+        opacity: 0.4,
+        color: "#fb61d7",
+        fill: true,
+        fillColor: "#fb61d7",
+        fillOpacity: 1,
+      },
+      polygon :  {
+        weight: 3,
+        color: "#fb61d7"
+      }
+    },
+    {
+      name: "Parking",
+      point : {
+        radius: 8,
+        weight: 10,
+        opacity: 0.4,
+        color: "#00b6eb",
+        fill: true,
+        fillColor: "#00b6eb",
+        fillOpacity: 1,
+      },
+      polygon :  {
+        weight: 3,
+        color: "#00b6eb"
+      }
+    },  
+  ]
+
+  function sumBoundaries(boundaryA, boundaryB){
+    if(boundaryA._southWest.lat > boundaryB._southWest.lat)
+      boundaryA._southWest.lat = boundaryB._southWest.lat
+    if(boundaryA._southWest.lng > boundaryB._southWest.lng)
+      boundaryA._southWest.lng = boundaryB._southWest.lng
+    if(boundaryA._northEast.lat < boundaryB._northEast.lat)
+      boundaryA._northEast.lat = boundaryB._northEast.lat
+    if(boundaryA._northEast.lng < boundaryB._northEast.lng)
+      boundaryA._northEast.lng = boundaryB._northEast.lng
+    return boundaryA
+  }
+
+  const poisConfig =  {
+    coordsToLatLng: (coords) => {
+      return L.CRS.EPSG3857.unproject(new L.Point(coords[0],coords[1]))
+    },
+    pointToLayer: (feature, latlng) => {
+      let circleStyle = categories[feature.properties.category].point
+      return L.circleMarker(latlng, circleStyle)
+    },
+    style: (feature) => {
+      return categories[feature.properties.category].polygon
+    },
+    onEachFeature: function (feature, layer) {
+      const container = L.DomUtil.create('div', "popupContainer")
+      if(!feature.properties.name && !feature.properties.description){
+        const nameDiv = L.DomUtil.create('div', 'id', container)
+        nameDiv.innerHTML =  "No info."
+      } else {
+        const nameDiv = L.DomUtil.create('div', 'id', container)
+        nameDiv.innerHTML =  feature.properties.name
+        const descriptiontDiv = L.DomUtil.create('div', 'description', container)
+        descriptiontDiv.innerHTML = feature.properties.description
+      }
+      layer.bindPopup(container)
+    }
+  }
+
+  fetch('./geojson/eeg_database.sde.pois.json')
+    .then( (response) => {
+      return response.json();
+    })
+    .then( (data) => {
+      const poisLayer = L.geoJSON(data, poisConfig)
+      poisLayer.addTo(map)
+      fetch('./geojson/eeg_database.sde.geofences.json')
+      .then( (response) => {
+        return response.json();
+      })
+      .then( (data) => {
+        const geofencesLayer = L.geoJSON(data, poisConfig)
+        geofencesLayer.addTo(map)
+        const boundary = sumBoundaries(poisLayer.getBounds(), geofencesLayer.getBounds())
+        map.fitBounds(boundary, { padding: [100,100] })
+        const baseLayers = {
+          "Boton base map": tiles
+        }
+        const overlayLayers = {
+          "POIs":  poisLayer,
+          "Geofences": geofencesLayer,
+        }
+        L.control.layers(baseLayers, overlayLayers).addTo(map)
+        var legend = L.control({position: 'bottomleft'})
+        legend.onAdd = function (map) {
+          var div = L.DomUtil.create('div', 'info')
+          for(const index in categories)
+            div.innerHTML += `<div class="legendRow"><div class="dot" style="background-color: ${categories[index].point.color};"></div><div class="legendLabel">${categories[index].name}</div></div>`
+          return div
+        };
+        legend.addTo(map);
+      })
+      .catch( (err) => {
+        console.log('error: ' + err);
+      });
+    })
+    .catch( (err) => {
+      console.log('error: ' + err);
+    });
+
+
+</script>
+
+
+
+</body>
+</html>
