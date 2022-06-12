@@ -6,7 +6,7 @@ Referencia: https://desktop.arcgis.com/es/arcmap/latest/manage-data/geodatabases
 #Import modules
 import os
 import arcpy
-from datetime import date
+from datetime import datetime
 
 workspace_description = arcpy.Describe(arcpy.env.workspace)
 if workspace_description.workspaceType != u'RemoteDatabase':
@@ -16,7 +16,7 @@ if workspace_description.connectionProperties.instance != u'sde:postgresql:local
     arcpy.AddError("Error: Current workspace need to be sde connection to a Postgresql running in localhost")
     exit()
 
-today = date.today().strftime("%d-%m-%y")
+today = datetime.today().strftime("%d-%m-%y_%H.%M.%S")
 adminConn = arcpy.env.workspace
 dirname = os.path.dirname(__file__)
 reconcilieLogFile = os.path.join(dirname, 'Logs', "reconcilie_log_"+today+".txt")
