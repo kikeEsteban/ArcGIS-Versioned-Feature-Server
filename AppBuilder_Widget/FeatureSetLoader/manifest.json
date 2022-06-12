@@ -1,13 +1,13 @@
 {
-  "name": "WFSLoader",
-  "label": "WFSLoader",
+  "name": "FeatureSetLoader",
+  "label": "FeatureSetLoader",
   "2D": true,
   "3D": false,
   "platform": "HTML",
   "version": "2.23",
   "wabVersion": "2.23",
-  "author": "MasterGIS Online",
-  "description": "Widget WFSLoader generado para el TFM",
+  "author": "Enrique Esteban García",
+  "description": "Widget FeatureSetLoader carga un set de FeatureLayers desde servicio FeatureServer",
   "copyright": "",
   "license": "http://www.apache.org/licenses/LICENSE-2.0",
   "properties": {

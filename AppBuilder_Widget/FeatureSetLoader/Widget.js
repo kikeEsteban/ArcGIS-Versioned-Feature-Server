@@ -9,11 +9,13 @@ define([
   ],
   function(declare, BaseWidget, FeatureLayer, esriRequest, html, Point, InfoTemplate) {
     return declare([BaseWidget], {
-      baseClass: 'jimu-widget-WMSLoader',
-      name: "WMSLoader",
+      baseClass: 'jimu-widget-FeatureSetLoader',
+      name: "FeatureSetLoader",
       addFMS: function() {
+
         html.empty(this.errorResultNode);
         html.empty(this.loadedResultNode);
+
         if(this.wfsTextBox.value != ""){
           var params = {
               url: this.config.base_url + this.wfsTextBox.value + "/FeatureServer",
@@ -32,12 +34,15 @@ define([
               this.addedLayers = []
               const fullExtent = result["fullExtent"]
               var contentStr = "<div style='display: flex; flex-direction: column;'><div>Layers loaded:</div>"
+              console.log("!!! Result")
+              console.log(result)
               var infoTemplate = new InfoTemplate("Attributes", "${*}");
               for(const layer in result.layers){
                 const layerUrl = params.url + "/" + result.layers[layer].id;
                 const featureLayer = new FeatureLayer(layerUrl,{outFields:["*"], infoTemplate: infoTemplate});
                 const addedLayer = this.map.addLayer(featureLayer);
                 this.addedLayers.push(addedLayer);
+                console.log(layer)
                 contentStr = contentStr + "<div style='margin-top: 5px'>" + result.layers[layer].type + " <b>" + result.layers[layer].name + "</b> of type: " + result.layers[layer].geometryType + "</div>"
               }
               contentStr = contentStr + "</div>"
@@ -48,7 +53,7 @@ define([
               html.place(aboutContent, this.loadedResultNode);
             }
           }, null, (update) => { 
-            console.log("load feature set progress !!!", update); 
+            console.log("progress loading feature set", update); 
           }).catch((err) => { 
             var aboutContent = html.toDom("<span>Error loading feature set: " + err.message+ "</span>");
             html.place(aboutContent, this.errorResultNode);
