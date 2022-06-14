@@ -8,13 +8,13 @@ workspace_description = arcpy.Describe(arcpy.env.workspace)
 if workspace_description.workspaceType != u'RemoteDatabase':
     arcpy.AddError("Error: Current workspace need to be a RemoteDatabase")
     exit()
-if workspace_description.connectionProperties.instance.find("postgresql:localhost") >= 0:
+if workspace_description.connectionProperties.instance.find("postgresql:localhost") < 0:
     arcpy.AddError("Error: Current workspace need to be a Postgresql database running in localhost")
     exit()
-if workspace_description.connectionProperties.user == u'sde':
+if workspace_description.connectionProperties.user != u'sde':
     arcpy.AddError("Error: Current workspace need to be in sde user")
     exit()    
-if workspace_description.connectionProperties.version == u'sde.DEFAULT':
+if workspace_description.connectionProperties.version != u'sde.DEFAULT':
     arcpy.AddError("Error: Current workspace need to be in default version")
     exit()
 

@@ -24,6 +24,7 @@ map_layers = arcpy.mapping.ListLayers(mxd)
 for layer in map_layers:
     if not layer.isFeatureLayer:
         arcpy.AddError("Error: All layers in the map need to be FeatureLayers")
+        arcpy.AddError(layer.name + " is not a featurelayer")
         exit() 
 
 dirname = os.path.dirname(__file__)
