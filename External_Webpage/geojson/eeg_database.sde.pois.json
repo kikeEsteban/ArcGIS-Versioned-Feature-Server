@@ -1,1 +1,0 @@
-{"type":"FeatureCollection","crs":{"type":"name","properties":{"name":"EPSG:3857"}},"features":[{"type":"Feature","id":1201,"geometry":{"type":"Point","coordinates":[-412689.46460000053,4927374.5414000005]},"properties":{"objectid":1201,"name":"Parking Sol","description":"Abierto todos los días","category":4}}]}

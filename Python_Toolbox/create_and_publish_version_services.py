@@ -55,7 +55,6 @@ for version_name in version_names:
     except ValueError as e:
         pass
 
-
 def configure_service_draft(doc):
     type_names = doc.getElementsByTagName('TypeName')
     for type_name in type_names:
@@ -74,9 +73,9 @@ def create_version(version_name, db_name, db_sde_password):
     arcpy.AddMessage("Process " + full_version_name)
     arcpy.AddMessage("Step 1: Generating version: " + full_version_name)
     arcpy.CreateVersion_management(arcpy.env.workspace, parentVersion, version_name, "PUBLIC")
-    arcpy.ChangeVersion_management('geofences','TRANSACTIONAL', full_version_name,'')
-    arcpy.ChangeVersion_management('pois','TRANSACTIONAL', full_version_name,'')
-    time.sleep(2)
+    for layer in map_layers:
+        arcpy.ChangeVersion_management(layer.name,'TRANSACTIONAL', full_version_name,'')
+        time.sleep(2)
     arcpy.AddMessage("Step 2: Create database connection file: " + db_connection_file)
     arcpy.management.CreateDatabaseConnection(
         connection_folder, 

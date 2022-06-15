@@ -211,14 +211,14 @@
     }
   }
 
-  fetch('./geojson/eeg_database.sde.pois.json')
+  fetch('./geojson/tfm_eeg_database.sde.pois.json')
     .then( (response) => {
       return response.json();
     })
     .then( (data) => {
       const poisLayer = L.geoJSON(data, poisConfig)
       poisLayer.addTo(map)
-      fetch('./geojson/eeg_database.sde.geofences.json')
+      fetch('./geojson/tfm_eeg_database.sde.geofences.json')
       .then( (response) => {
         return response.json();
       })

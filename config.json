@@ -1,5 +1,5 @@
 {
-    "db_name": "EEG_DataBase",
+    "db_name": "TFM_EEG_DataBase",
     "db_sde_password": "gis12345",
     "server_publisher_name": "EEG_Publicador",
     "server_publisher_password": "EEG_Publicador"
