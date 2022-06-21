@@ -8,21 +8,34 @@ import os
 import arcpy
 from datetime import datetime
 
-workspace_description = arcpy.Describe(arcpy.env.workspace)
-if workspace_description.workspaceType != u'RemoteDatabase':
-    arcpy.AddError("Error: Current workspace need to be a RemoteDatabase")
-    exit()
-if workspace_description.connectionProperties.instance != u'sde:postgresql:localhost':
-    arcpy.AddError("Error: Current workspace need to be sde connection to a Postgresql running in localhost")
-    exit()
 
 today = datetime.today().strftime("%d-%m-%y_%H.%M.%S")
 adminConn = arcpy.env.workspace
-dirname = os.path.dirname(__file__)
+mxd = arcpy.mapping.MapDocument("CURRENT")
+dirname = os.path.dirname(mxd.filePath)
 reconcilieLogFile = os.path.join(dirname, 'Logs', "reconcilie_log_"+today+".txt")
+
+type_of_conflict = "BY_OBJECT"
+by_attribute = arcpy.GetParameter(1)
+if by_attribute: 
+    type_of_conflict = "BY_ATTRIBUTE"
+
+abort = "NO_ABORT"
+abort_conflicts = arcpy.GetParameter(2)
+if abort_conflicts: 
+    abort = "ABORT_CONFLICTS" 
 
 inputs = arcpy.GetParameterAsText(0).split(";")
 arcpy.AddMessage(inputs)
+
+# Validations
+workspace_description = arcpy.Describe(arcpy.env.workspace)
+if workspace_description.workspaceType != u'RemoteDatabase':
+    arcpy.AddError("Error: Current workspace need to be a RemoteDatabase")
+    raise
+if workspace_description.connectionProperties.instance != u'sde:postgresql:localhost':
+    arcpy.AddError("Error: Current workspace need to be sde connection to a Postgresql running in localhost")
+    raise
 
 version_names = []
 for input in inputs:
@@ -37,17 +50,9 @@ for version_name in version_names:
         versionList.index(version_name)
     except ValueError as e:
        arcpy.AddError(version_name + " version doesn't exist")
-       exit()
+       raise
 
-type_of_conflict = "BY_OBJECT"
-by_attribute = arcpy.GetParameter(1)
-if by_attribute: 
-    type_of_conflict = "BY_ATTRIBUTE"
-
-abort = "NO_ABORT"
-abort_conflicts = arcpy.GetParameter(2)
-if abort_conflicts: 
-    abort = "ABORT_CONFLICTS"    
+# Conciele process
 
 # Block new connections to the database.
 arcpy.AddMessage("The database is no longer accepting connections")

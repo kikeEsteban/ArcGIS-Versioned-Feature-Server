@@ -4,31 +4,40 @@ import json
 import requests
 import arcpy
 
-workspace_description = arcpy.Describe(arcpy.env.workspace)
-if workspace_description.workspaceType != u'RemoteDatabase':
-    arcpy.AddError("Error: Current workspace need to be a RemoteDatabase")
-    exit()
-if workspace_description.connectionProperties.instance.find("postgresql:localhost") < 0:
-    arcpy.AddError("Error: Current workspace need to be a Postgresql database running in localhost")
-    exit()
-if workspace_description.connectionProperties.user != u'sde':
-    arcpy.AddError("Error: Current workspace need to be in sde user")
-    exit()    
-if workspace_description.connectionProperties.version != u'sde.DEFAULT':
-    arcpy.AddError("Error: Current workspace need to be in default version")
-    exit()
 
-dirname = os.path.dirname(__file__)
+mxd = arcpy.mapping.MapDocument("CURRENT")
+dirname = os.path.dirname(mxd.filePath)
+
 connection_folder = os.path.join(dirname, 'Connections')
+if not os.path.isdir(connection_folder):
+    os.mkdir(connection_folder)
 connection_out_name = 'connection_server.ags'
 connection_full_path = os.path.join(connection_folder,connection_out_name)
 arcpy.AddMessage("Input parameters: ")
 version_folder = os.path.join(dirname, 'Versions')
+if not os.path.isdir(version_folder):
+    os.mkdir(version_folder)
 version_names = arcpy.GetParameter(0)
 arcpy.AddMessage(version_names)
 arcpy.AddMessage("Config file: " + arcpy.GetParameterAsText(1))
 system_name = platform.node()
 adminConn = arcpy.env.workspace
+
+
+# Validations
+workspace_description = arcpy.Describe(arcpy.env.workspace)
+if workspace_description.workspaceType != u'RemoteDatabase':
+    arcpy.AddError("Error: Current workspace need to be a RemoteDatabase")
+    raise
+if workspace_description.connectionProperties.instance.find("postgresql:localhost") < 0:
+    arcpy.AddError("Error: Current workspace need to be a Postgresql database running in localhost")
+    raise
+if workspace_description.connectionProperties.user != u'sde':
+    arcpy.AddError("Error: Current workspace need to be in sde user")
+    raise    
+if workspace_description.connectionProperties.version != u'sde.DEFAULT':
+    arcpy.AddError("Error: Current workspace need to be in default version")
+    raise
 
 versionList = arcpy.ListVersions(adminConn)
 for version_name in version_names:
@@ -37,7 +46,7 @@ for version_name in version_names:
         versionList.index(full_version_name)
     except ValueError as e:
        arcpy.AddError(version_name + " version doesn't exist")
-       exit()
+       raise
 
 def gentoken(username, password, expiration=60):
     query_dict = {'username':   username,
@@ -98,8 +107,8 @@ def process(config):
             except Exception as e:
                 arcpy.AddError("Error deleting service definition " + versionedServiceSdPath)
                 arcpy.AddError(e) 
-            try:        
-                arcpy.DisconnectUser(adminConn, "ALL")          
+            try:    
+                arcpy.DisconnectUser(adminConn, "ALL")    
                 arcpy.management.DeleteVersion(arcpy.env.workspace, version_name)
                 arcpy.AddMessage("Deleted service " + version_name)
                 arcpy.AcceptConnections(adminConn, True)

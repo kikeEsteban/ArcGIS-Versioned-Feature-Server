@@ -5,34 +5,18 @@ import json
 import time
 import xml.dom.minidom as DOM 
 
-workspace_description = arcpy.Describe(arcpy.env.workspace)
-if workspace_description.workspaceType != u'RemoteDatabase':
-    arcpy.AddError("Error: Current workspace need to be a RemoteDatabase")
-    exit()
-if workspace_description.connectionProperties.instance.find("postgresql:localhost") < 0:
-    arcpy.AddError("Error: Current workspace need to be a Postgresql database running in localhost")
-    exit()
-if workspace_description.connectionProperties.user != u'sde':
-    arcpy.AddError("Error: Current workspace need to be in sde user")
-    exit()    
-if workspace_description.connectionProperties.version != u'sde.DEFAULT':
-    arcpy.AddError("Error: Current workspace need to be in default version")
-    exit()
 
 mxd = arcpy.mapping.MapDocument("CURRENT")
-map_layers = arcpy.mapping.ListLayers(mxd)
-for layer in map_layers:
-    if not layer.isFeatureLayer:
-        arcpy.AddError("Error: All layers in the map need to be FeatureLayers")
-        arcpy.AddError(layer.name + " is not a featurelayer")
-        exit() 
-
-dirname = os.path.dirname(__file__)
+dirname = os.path.dirname(mxd.filePath)
 connection_folder = os.path.join(dirname, 'Connections')
+if not os.path.isdir(connection_folder):
+    os.mkdir(connection_folder)
 connection_out_name = 'connection_server.ags'
 connection_full_path = os.path.join(connection_folder,connection_out_name)
 arcpy.AddMessage("Connection file: " + connection_full_path)
 version_folder = os.path.join(dirname, 'Versions')
+if not os.path.isdir(version_folder):
+    os.mkdir(version_folder)
 arcpy.AddMessage("Version folder: " + version_folder)
 system_name = platform.node()
 server_url = 'https://{}:6443/arcgis/admin/'.format(system_name)
@@ -44,6 +28,28 @@ version_names = arcpy.GetParameter(0)
 arcpy.AddMessage(version_names)
 arcpy.AddMessage("Config file: " + arcpy.GetParameterAsText(1))
 
+# Validations
+workspace_description = arcpy.Describe(arcpy.env.workspace)
+if workspace_description.workspaceType != u'RemoteDatabase':
+    arcpy.AddError("Error: Current workspace need to be a RemoteDatabase")
+    raise
+if workspace_description.connectionProperties.instance.find("postgresql:localhost") < 0:
+    arcpy.AddError("Error: Current workspace need to be a Postgresql database running in localhost")
+    raise
+if workspace_description.connectionProperties.user != u'sde':
+    arcpy.AddError("Error: Current workspace need to be in sde user")
+    raise    
+if workspace_description.connectionProperties.version != u'sde.DEFAULT':
+    arcpy.AddError("Error: Current workspace need to be in default version")
+    raise
+
+map_layers = arcpy.mapping.ListLayers(mxd)
+for layer in map_layers:
+    if not layer.isFeatureLayer:
+        arcpy.AddError("Error: All layers in the map need to be FeatureLayers")
+        arcpy.AddError(layer.name + " is not a featurelayer")
+        raise 
+
 adminConn = arcpy.env.workspace
 versionList = arcpy.ListVersions(adminConn)
 for version_name in version_names:
@@ -51,7 +57,7 @@ for version_name in version_names:
     try:
         if versionList.index(full_version_name) >= 0:
             arcpy.AddError(version_name + " version already exists")
-            exit(-1)
+            raise
     except ValueError as e:
         pass
 
@@ -136,7 +142,7 @@ def process(config):
     arcpy.AddMessage("db_name: " + db_name)
     if workspace_description.connectionProperties.database != db_name:
         arcpy.AddError("Error: Current workspace need to be a connected to target DB")
-        exit()
+        raise
     arcpy.AddMessage("Preparing GIS Server connection file")
     if os.path.exists(connection_full_path):
         os.remove(connection_full_path)
